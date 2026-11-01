@@ -1,0 +1,7 @@
+h1 { color: red; }
+img { width: 200px; height: 200px; }
+/* Đổi màu chữ của trang active thành màu đỏ */
+.nav-link.active {
+    color: red !important;
+    font-weight: bold;
+}

@@ -1,0 +1,21 @@
+<nav class="navbar navbar-expand-lg navbar-light bg-light border-bottom">
+    <div class="container">
+        <!-- Tên website lấy tự động từ context processor -->
+        <a class="navbar-brand d-flex align-items-center" href="{{ url_for('about') }}">
+            <img src="{{ url_for('static', filename='img/logo.jpg') }}" alt="Logo" height="30" class="me-2 rounded">
+            <strong>{{ site_name }}</strong>
+        </a>
+
+        <!-- Đánh dấu active bằng hàm is_active() -->
+        <div class="navbar-nav">
+            <a class="nav-link {{ is_active('about') }}" 
+               href="{{ url_for('about') }}">Giới thiệu</a>
+
+            <a class="nav-link {{ is_active('contact') }}" 
+               href="{{ url_for('contact') }}">Liên hệ</a>
+
+            <a class="nav-link {{ is_active('hello') }}" 
+               href="{{ url_for('hello', name='Nam') }}">Trang Hello</a>
+        </div>
+    </div>
+</nav>

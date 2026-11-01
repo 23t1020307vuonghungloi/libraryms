@@ -1,0 +1,210 @@
+<!-- // kết nới tới sodiem.py
+///
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Quản lý sinh viên</title>
+</head>
+<body>
+
+    <!-- ==================== 1. TRANG CHỦ ==================== -->
+    {% if page == 'home' %}
+        <h1>Trang chủ</h1>
+        <p>Tổng số sinh viên: {{ total_students }}</p>
+        <p>Số lớp: {{ classes|length }} ({{ classes|join(', ') }})</p>
+        <ul>
+            <li><a href="{{ url_for('student_list') }}">Xem danh sách sinh viên (HTML)</a></li>
+            <li><a href="{{ url_for('api_students') }}">Xem API danh sách sinh viên (JSON)</a></li>
+            <li><a href="{{ url_for('search_students') }}">Tìm kiếm sinh viên (Câu 6)</a></li>
+        </ul>
+
+    <!-- ==================== 2. TRANG DANH SÁCH ==================== -->
+    {% elif page == 'list' %}
+        <h2>Danh sách sinh viên</h2>
+        <div style="margin-bottom: 15px;">
+            <strong>Thanh lọc: </strong>
+            <a href="{{ url_for('student_list', lop='Tất cả') }}">Tất cả</a> | 
+            {% for c in classes %}
+                <a href="{{ url_for('student_list', lop=c) }}">{{ c }}</a> | 
+            {% endfor %}
+        </div>
+
+        <div style="margin-bottom: 15px;">
+            <a href="{{ url_for('search_students') }}">🔍 Chuyển đến trang tìm kiếm</a> | 
+            <a href="{{ url_for('home') }}">Trang chủ</a>
+        </div>
+
+        {% if not filtered_students %}
+            <p style="color: red;">Không có sinh viên phù hợp.</p>
+        {% else %}
+            <table border="1" cellpadding="8" cellspacing="0">
+                <thead>
+                    <tr>
+                        <th>MSSV</th>
+                        <th>Họ tên</th>
+                        <th>Lớp</th>
+                        <th>Điểm TB</th>
+                        <th>Xếp loại</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for mssv, data in filtered_students.items() %}
+                    <tr>
+                        <td><a href="{{ url_for('student_detail', mssv=mssv) }}">{{ mssv }}</a></td>
+                        <td>{{ data.name }}</td>
+                        <td>{{ data.lop }}</td>
+                        <td>{{ data.avg if data.avg is not none else '-' }}</td>
+                        <td>{{ data.rank }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% endif %}
+
+    <!-- ==================== 3. TRANG CHI TIẾT ==================== -->
+    {% elif page == 'detail' %}
+        <h2>Thông tin chi tiết sinh viên</h2>
+        <p><strong>MSSV:</strong> {{ mssv }}</p>
+        <p><strong>Họ tên:</strong> {{ info.name }}</p>
+        <p><strong>Lớp:</strong> <a href="{{ url_for('student_list', lop=info.lop) }}">{{ info.lop }}</a></p>
+        <p><strong>Điểm TB:</strong> {{ avg if avg is not none else '-' }}</p>
+        <p><strong>Xếp loại:</strong> {{ rank }}</p>
+        
+        <p><strong>Link rút gọn (Câu 4):</strong> 
+            <a href="{{ url_for('short_student_redirect', mssv=mssv) }}">
+                {{ url_for('short_student_redirect', mssv=mssv, _external=True) }}
+            </a>
+        </p>
+        <p><a href="{{ url_for('export_student_csv', mssv=mssv) }}">📥 Tải bảng điểm (CSV)</a></p>
+        
+        <h3>Bảng điểm học phần</h3>
+        {% if info.scores %}
+            <table border="1" cellpadding="6" cellspacing="0">
+                <thead>
+                    <tr>
+                        <th>Học phần</th>
+                        <th>Điểm</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for subject, score in info.scores.items() %}
+                    <tr>
+                        <td>{{ subject }}</td>
+                        <td>{{ score }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p>Chưa có điểm học phần.</p>
+        {% endif %}
+        
+        <p style="margin-top: 20px;"><a href="{{ url_for('student_list') }}">← Quay lại danh sách sinh viên</a></p>
+
+    <!-- ==================== 4. TRANG TÌM KIẾM ==================== -->
+    {% elif page == 'search' %}
+        <h2>Tìm kiếm sinh viên</h2>
+        <form method="GET" action="{{ url_for('search_students') }}" style="margin-bottom: 20px;">
+            <input type="text" name="q" value="{{ keyword }}" placeholder="Nhập tên hoặc MSSV..." style="padding: 5px; width: 250px;">
+            <button type="submit" style="padding: 5px 10px;">Tìm kiếm</button>
+        </form>
+
+        {% if keyword %}
+            <p>Tìm thấy {{ matched_students|length }} kết quả cho "{{ keyword }}":</p>
+            
+            {% if matched_students %}
+                <table border="1" cellpadding="8" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>MSSV</th>
+                            <th>Họ tên</th>
+                            <th>Lớp</th>
+                            <th>Điểm TB</th>
+                            <th>Xếp loại</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for mssv, data in matched_students.items() %}
+                        <tr>
+                            <td><a href="{{ url_for('student_detail', mssv=mssv) }}">{{ mssv }}</a></td>
+                            <td>{{ data.name }}</td>
+                            <td>{{ data.lop }}</td>
+                            <td>{{ data.avg if data.avg is not none else '-' }}</td>
+                            <td>{{ data.rank }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% endif %}
+        {% endif %}
+
+        <p style="margin-top: 20px;"><a href="{{ url_for('student_list') }}">← Quay lại danh sách sinh viên</a></p>
+    {% endif %}
+
+</body>
+</html> -->
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Máy Tính Cơ Bản</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; background-color: #f4f4f9; }
+        .calculator-card { max-width: 400px; margin: 0 auto; padding: 20px; background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input, select, button { width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
+        button { background-color: #007bff; color: white; border: none; font-size: 16px; cursor: pointer; margin-top: 10px; }
+        button:hover { background-color: #0056b3; }
+        .error { color: red; font-size: 0.85em; margin-top: 4px; }
+        .result { margin-top: 20px; padding: 10px; background-color: #d4edda; color: #155724; border-radius: 4px; font-weight: bold; text-align: center; font-size: 1.1em; }
+    </style>
+</head>
+<body>
+
+<div class="calculator-card">
+    <h2>Máy Tính Cơ Bản</h2>
+    <form method="POST">
+        <div class="form-group">
+            <label for="a">Số a:</label>
+            <input type="text" id="a" name="a" value="{{ a }}">
+            {% if error_a %}
+                <div class="error">{{ error_a }}</div>
+            {% endif %}
+        </div>
+
+        <div class="form-group">
+            <label for="op">Phép toán:</label>
+            <select id="op" name="op">
+                <option value="+" {% if op == '+' %}selected{% endif %}>+</option>
+                <option value="-" {% if op == '-' %}selected{% endif %}>-</option>
+                <option value="*" {% if op == '*' %}selected{% endif %}>*</option>
+                <option value="/" {% if op == '/' %}selected{% endif %}>/</option>
+            </select>
+            {% if error_op %}
+                <div class="error">{{ error_op }}</div>
+            {% endif %}
+        </div>
+
+        <div class="form-group">
+            <label for="b">Số b:</label>
+            <input type="text" id="b" name="b" value="{{ b }}">
+            {% if error_b %}
+                <div class="error">{{ error_b }}</div>
+            {% endif %}
+        </div>
+
+        <button type="submit">Tính toán</button>
+    </form>
+
+    {% if result %}
+        <div class="result">
+            {{ result }}
+        </div>
+    {% endif %}
+</div>
+
+</body>
+</html>
